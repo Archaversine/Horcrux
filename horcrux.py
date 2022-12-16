@@ -93,10 +93,45 @@ def keysplit(keyname: str, inputs: list, outputs: list) -> None:
     for output_file in output_files:
         output_file.close()
 
+def keyadd(keyname: str, inputs: list, outputs: list) -> None:
+
+    if len(inputs) != len(outputs):
+        error("Number of inputs must equal number of outputs")
+
+    key_file = open(keyname, "rb+")
+    input_files = [open(x, "rb") for x in inputs]
+    output_files = [open(x, "wb") for x in outputs]
+
+    input_bytes = [input_file.read(1) for input_file in input_files]
+
+    while any(input_bytes):
+        key_byte = key_file.read(1)
+
+        if not key_byte:
+            key_byte = bytes([secrets.randbits(8)])
+            key_file.write(key_byte)
+            # NOTE: May need to add key_file.read(1) to prevent reading (I think it is fine without this)
+
+        for i, input_byte in enumerate(input_bytes):
+            if not input_byte:
+                continue
+
+            output_files[i].write(bytes([ord(key_byte) ^ ord(input_byte)]))
+
+        input_bytes = [input_file.read(1) for input_file in input_files]
+
+    key_file.close()
+
+    for input_file in input_files:
+        input_file.close()
+
+    for output_file in output_files:
+        output_file.close()
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Protect your files by splitting their souls.')
-    parser.add_argument("mode", type=str, help="Action to perform.", choices=("split", "merge", "keysplit"))
+    parser.add_argument("mode", type=str, help="Action to perform.", choices=("split", "merge", "keysplit", "keyadd"))
     parser.add_argument("-k", "--key", type=str, help="Filename of key for keysplitting.")
     parser.add_argument("-i", "--input", type=str, help="Names of input files.", nargs='*')
     parser.add_argument("-o", "--output", type=str, help="Names of output files.", nargs='*')
@@ -126,7 +161,7 @@ if __name__ == '__main__':
         sys.exit(0)
 
     # Ensure keysplitting has key argument
-    if args.mode == "keysplit" and args.key is None:
+    if (args.mode == "keysplit" and args.key is None) or (args.mode == "keyadd" and args.key is None):
         error("No keyfile given.")
 
     if args.mode == "split":
@@ -135,3 +170,5 @@ if __name__ == '__main__':
         merge_files(args.input, args.output[0])
     elif args.mode == "keysplit":
         keysplit(args.key, args.input, args.output)
+    elif args.mode == "keyadd":
+        keyadd(args.key, args.input, args.output)
