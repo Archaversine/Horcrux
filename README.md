@@ -2,9 +2,7 @@
 
 Protect your files by splitting their souls.
 
-## How it works
-
-### Horcruxes
+## Horcruxes
 
 A horcrux is a file that contains a fraction of the information of another file,
 similar to how horcruxes in Harry Potter contain split pieces of a soul to
@@ -17,7 +15,7 @@ of 100 horcruxes combined will not yield any information about the original
 file; all horcruxes must be present to merge to the original file. The data a
 horcrux holds is only meaningful if all the other pieces are present.
 
-### Splitting (Encryption)
+## Splitting Algorithm (Encryption)
 
 At it's core, encryption and decryption calculations revolve around the use of
 XOR. When a file is split, securely random bytes are generated in a way such
@@ -35,7 +33,7 @@ In pseudocode:
 third_byte = original_byte XOR first_rand_byte XOR second_rand_byte
 ```
 
-### Merging (Decryption)
+## Merging Algorithm (Decryption)
 
 To merge files together, the process is even easier. To recover the original
 file from it's 'horcruxes', the program goes through every byte in each horcrux
@@ -50,7 +48,7 @@ In pseudocode:
 original_byte = byte_from_1hcx XOR byte_from_2hcx XOR byte_from_3hcx
 ```
 
-### Splitting with Keys (Advanced Encryption)
+## Splitting with Key Horcruxes (Advanced Encryption)
 
 To create a horcrux that is compatible with multiple files, A 'key' with the
 same size as the largest input file is generated. After this key is generated,
@@ -60,9 +58,7 @@ default behavior for merging in general). The output files will each be
 horcruxes that can be merged with the key to recover it's original file. Of
 course, both the key and the horcruxes and be split or merged even more.
 
-## Usage
-
-Command Line Usage:
+## Command Line Usage
 
 ```
 usage: horcrux [-h] [-k KEY] [-i [INPUT ...]] [-o [OUTPUT ...]]
@@ -87,9 +83,7 @@ On windows, the program can be run with the `python` or `python3` command. This
 can also be done on linux, or `horcrux.py` can be placed in a folder in the PATH
 variable with execution permissions and used directly as a command.
 
-### Basic Usage
-
-#### Splitting Files (Encryption)
+## Splitting Files (Encryption)
 
 To split a file into any number of parts, use the following syntax:
 
@@ -108,7 +102,7 @@ is split into 100 horcruxes and one horcrux is missing, the original data
 The name or file extension of the horcruxes (output files) does not matter, they
 will appear as corrupted files either way.
 
-#### Merging Horcruxes (Decryption)
+## Merging Horcruxes (Decryption)
 
 To merge horcruxes into their original file, use the following syntax:
 
@@ -121,9 +115,7 @@ a decrypted file. If the horcruxes vary in size, the merging algorithm will use
 the size of the smallest horcrux. Since there's no way to confirm if a file is a
 horcrux, the merge algorithm can be applied to any list of files.
 
-### Advanced Usage
-
-#### Sharing Horcruxes Between Files (Master Key)
+## Sharing Horcruxes Between Files (Master Key)
 
 Different Files can share horcruxes that hold the information to both of them.
 For example, the horcrux `a.hcx` merged with the horcrux `k.hcx` may yield an
@@ -151,7 +143,7 @@ horcrux merge --input keyName horcrux1 --output file1
 
 This merges the key horcrux with the other horcrux generated.
 
-#### Adding to Shared Horcruxes (Add to Master Key)
+## Adding to Shared Horcruxes (Add to Master Key)
 
 If a key horcrux already exists, it can still be used with other files even if
 they have not been split yet.
