@@ -96,32 +96,41 @@ def keysplit(keyname: str, inputs: list, outputs: list, chunk_size: int) -> None
     for output_file in output_files:
         output_file.close()
 
-def keyadd(keyname: str, inputs: list, outputs: list) -> None:
+def keyadd(keyname: str, inputs: list, outputs: list, chunk_size: int) -> None:
 
     if len(inputs) != len(outputs):
-        error("Number of inputs must equal number of outputs")
+        error("Number of inputs must equal number of outputs.")
 
-    key_file = open(keyname, "rb+")
+    key_file = open(keyname, "ab+")
+    key_file.seek(0)
+
     input_files = [open(x, "rb") for x in inputs]
     output_files = [open(x, "wb") for x in outputs]
 
-    input_bytes = [input_file.read(1) for input_file in input_files]
+    input_chunks = [input_file.read(chunk_size) for input_file in input_files]
 
-    while any(input_bytes):
-        key_byte = key_file.read(1)
+    while any(input_chunks):
 
-        if not key_byte:
-            key_byte = os.urandom(1)
-            key_file.write(key_byte)
-            # NOTE: May need to add key_file.read(1) to prevent reading (I think it is fine without this)
+        key_chunk = bytearray(key_file.read(chunk_size))
+        max_chunk_length = max([len(input_chunk) for input_chunk in input_chunks])
 
-        for i, input_byte in enumerate(input_bytes):
-            if not input_byte:
+        if len(key_chunk) < max_chunk_length:
+            random_chunk = os.urandom(max_chunk_length - len(key_chunk))
+            key_file.write(random_chunk)
+            key_chunk.extend(random_chunk)
+
+        for i in range(len(input_chunks)):
+            if not input_chunks[i]:
                 continue
 
-            output_files[i].write(bytes([ord(key_byte) ^ ord(input_byte)]))
+            xor_chunk = bytearray(input_chunks[i])
 
-        input_bytes = [input_file.read(1) for input_file in input_files]
+            for j in range(len(xor_chunk)):
+                xor_chunk[j] ^= key_chunk[j]
+
+            output_files[i].write(xor_chunk)
+
+        input_chunks = [input_file.read(chunk_size) for input_file in input_files]
 
     key_file.close()
 
@@ -175,4 +184,4 @@ if __name__ == '__main__':
     elif args.mode == "keysplit":
         keysplit(args.key, args.input, args.output, args.chunk_size)
     elif args.mode == "keyadd":
-        keyadd(args.key, args.input, args.output)
+        keyadd(args.key, args.input, args.output, args.chunk_size)
