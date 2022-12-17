@@ -7,8 +7,6 @@ import argparse
 
 CHUNK_SIZE = 1024 * 1024  # 1 MB
 
-from functools import reduce
-
 def error(message: str) -> None:
     print(f"<> Error: {message}")
     sys.exit(1)
