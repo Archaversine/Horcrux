@@ -52,8 +52,6 @@ def merge_files(inputs: list, output_filename: str) -> None:
         decrypted_chunk = bytearray(len(chunks[0]))
 
         for i in range(len(chunks[0])):
-            decrypted_chunk[i] = 0
-
             for j in range(len(chunks)):
                 decrypted_chunk[i] ^= chunks[j][i]
 
