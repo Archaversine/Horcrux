@@ -2,7 +2,6 @@
 
 import os
 import sys
-import secrets
 import argparse
 
 def error(message: str) -> None:
@@ -20,15 +19,15 @@ def split_file(input_filename: str, outputs: list) -> None:
     byte = input_file.read(1)
 
     while byte:
-        random_bytes = [secrets.randbits(8) for _ in range(len(target_files) - 1)]
+        random_bytes = [os.urandom(1) for _ in range(len(target_files) - 1)]
 
         for i in range(len(target_files) - 1):
-            target_files[i].write(bytes([random_bytes[i]]))
+            target_files[i].write(random_bytes[i])
 
         result_byte = byte
 
         for random_byte in random_bytes:
-            result_byte = bytes([random_byte ^ ord(result_byte)])
+            result_byte = bytes([ord(random_byte) ^ ord(result_byte)])
 
         target_files[-1].write(result_byte)
 
@@ -47,11 +46,11 @@ def merge_files(inputs: list, output_filename: str, chunk_size: int) -> None:
     chunks = [f.read(chunk_size) for f in input_files]
 
     while all(chunks):
-        decrypted_chunk = bytearray(len(chunks[0]))
+        decrypted_chunk = bytearray(min([len(chunk) for chunk in chunks]))
 
-        for i in range(len(chunks[0])):
-            for j in range(len(chunks)):
-                decrypted_chunk[i] ^= chunks[j][i]
+        for i in range(len(decrypted_chunk)):
+            for chunk in chunks:
+                decrypted_chunk[i] ^= chunk[i]
 
         output_file.write(decrypted_chunk)
 
@@ -75,14 +74,14 @@ def keysplit(keyname: str, inputs: list, outputs: list) -> None:
 
     while any(input_bytes):
 
-        key_byte = secrets.randbits(8)
-        key_file.write(bytes([key_byte]))
+        key_byte = os.urandom(1)
+        key_file.write(key_byte)
 
         for i, input_byte in enumerate(input_bytes):
             if not input_byte:
                 continue
 
-            output_files[i].write(bytes([key_byte ^ ord(input_byte)]))
+            output_files[i].write(bytes([ord(key_byte) ^ ord(input_byte)]))
 
         input_bytes = [input_file.read(1) for input_file in input_files]
 
@@ -109,7 +108,7 @@ def keyadd(keyname: str, inputs: list, outputs: list) -> None:
         key_byte = key_file.read(1)
 
         if not key_byte:
-            key_byte = bytes([secrets.randbits(8)])
+            key_byte = os.urandom(1)
             key_file.write(key_byte)
             # NOTE: May need to add key_file.read(1) to prevent reading (I think it is fine without this)
 
