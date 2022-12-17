@@ -59,29 +59,34 @@ def merge_files(inputs: list, output_filename: str, chunk_size: int) -> None:
     for input_file in input_files:
         input_file.close()
 
-def keysplit(keyname: str, inputs: list, outputs: list) -> None:
+def keysplit(keyname: str, inputs: list, outputs: list, chunk_size: int) -> None:
 
     if len(inputs) != len(outputs):
-        error("Number of inputs must equal number of outputs.")
+        error("Number of inputs must equal number of outupts.")
 
     key_file = open(keyname, "wb")
     input_files = [open(x, "rb") for x in inputs]
     output_files = [open(x, "wb") for x in outputs]
 
-    input_bytes = [input_file.read(1) for input_file in input_files]
+    input_chunks = [input_file.read(chunk_size) for input_file in input_files]
 
-    while any(input_bytes):
+    while any(input_chunks):
 
-        key_byte = os.urandom(1)
-        key_file.write(key_byte)
+        key_chunk = os.urandom(chunk_size)
+        key_file.write(key_chunk)
 
-        for i, input_byte in enumerate(input_bytes):
-            if not input_byte:
+        for i in range(len(input_chunks)):
+            if not input_chunks[i]:
                 continue
 
-            output_files[i].write(bytes([ord(key_byte) ^ ord(input_byte)]))
+            xor_chunk = bytearray(input_chunks[i])
 
-        input_bytes = [input_file.read(1) for input_file in input_files]
+            for j in range(len(xor_chunk)):
+                xor_chunk[j] ^= key_chunk[j]
+
+            output_files[i].write(xor_chunk)
+
+        input_chunks = [input_file.read(chunk_size) for input_file in input_files]
 
     key_file.close()
 
@@ -168,6 +173,6 @@ if __name__ == '__main__':
     elif args.mode == "merge":
         merge_files(args.input, args.output[0], args.chunk_size)
     elif args.mode == "keysplit":
-        keysplit(args.key, args.input, args.output)
+        keysplit(args.key, args.input, args.output, args.chunk_size)
     elif args.mode == "keyadd":
         keyadd(args.key, args.input, args.output)
