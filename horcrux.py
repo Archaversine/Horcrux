@@ -5,8 +5,6 @@ import sys
 import secrets
 import argparse
 
-CHUNK_SIZE = 1024 * 1024  # 1 MB
-
 def error(message: str) -> None:
     print(f"<> Error: {message}")
     sys.exit(1)
@@ -41,12 +39,12 @@ def split_file(input_filename: str, outputs: list) -> None:
     for target_file in target_files:
         target_file.close()
 
-def merge_files(inputs: list, output_filename: str) -> None:
+def merge_files(inputs: list, output_filename: str, chunk_size: int) -> None:
 
     output_file = open(output_filename, "wb")
     input_files = [open(x, "rb") for x in inputs]
 
-    chunks = [f.read(CHUNK_SIZE) for f in input_files]
+    chunks = [f.read(chunk_size) for f in input_files]
 
     while all(chunks):
         decrypted_chunk = bytearray(len(chunks[0]))
@@ -57,7 +55,7 @@ def merge_files(inputs: list, output_filename: str) -> None:
 
         output_file.write(decrypted_chunk)
 
-        chunks = [f.read(CHUNK_SIZE) for f in input_files]
+        chunks = [f.read(chunk_size) for f in input_files]
 
     output_file.close()
 
@@ -138,6 +136,7 @@ if __name__ == '__main__':
     parser.add_argument("-k", "--key", type=str, help="Filename of key for keysplitting.")
     parser.add_argument("-i", "--input", type=str, help="Names of input files.", nargs='*')
     parser.add_argument("-o", "--output", type=str, help="Names of output files.", nargs='*')
+    parser.add_argument("-c", "--chunk-size", type=int, help="How many bytes to load into RAM per file (Default: 1MB)", default=1024 * 1024)
 
     args = parser.parse_args()
 
@@ -170,7 +169,7 @@ if __name__ == '__main__':
     if args.mode == "split":
         split_file(args.input[0], args.output)
     elif args.mode == "merge":
-        merge_files(args.input, args.output[0])
+        merge_files(args.input, args.output[0], args.chunk_size)
     elif args.mode == "keysplit":
         keysplit(args.key, args.input, args.output)
     elif args.mode == "keyadd":
