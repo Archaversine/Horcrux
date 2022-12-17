@@ -59,44 +59,7 @@ def merge_files(inputs: list, output_filename: str, chunk_size: int) -> None:
     for input_file in input_files:
         input_file.close()
 
-def keysplit(keyname: str, inputs: list, outputs: list, chunk_size: int) -> None:
-
-    if len(inputs) != len(outputs):
-        error("Number of inputs must equal number of outupts.")
-
-    key_file = open(keyname, "wb")
-    input_files = [open(x, "rb") for x in inputs]
-    output_files = [open(x, "wb") for x in outputs]
-
-    input_chunks = [input_file.read(chunk_size) for input_file in input_files]
-
-    while any(input_chunks):
-
-        key_chunk = os.urandom(chunk_size)
-        key_file.write(key_chunk)
-
-        for i in range(len(input_chunks)):
-            if not input_chunks[i]:
-                continue
-
-            xor_chunk = bytearray(input_chunks[i])
-
-            for j in range(len(xor_chunk)):
-                xor_chunk[j] ^= key_chunk[j]
-
-            output_files[i].write(xor_chunk)
-
-        input_chunks = [input_file.read(chunk_size) for input_file in input_files]
-
-    key_file.close()
-
-    for input_file in input_files:
-        input_file.close()
-
-    for output_file in output_files:
-        output_file.close()
-
-def keyadd(keyname: str, inputs: list, outputs: list, chunk_size: int) -> None:
+def horcrux_key(keyname: str, inputs: list, outputs: list, chunk_size: int) -> None:
 
     if len(inputs) != len(outputs):
         error("Number of inputs must equal number of outputs.")
@@ -143,8 +106,8 @@ def keyadd(keyname: str, inputs: list, outputs: list, chunk_size: int) -> None:
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Protect your files by splitting their souls.')
-    parser.add_argument("mode", type=str, help="Action to perform.", choices=("split", "merge", "keysplit", "keyadd"))
-    parser.add_argument("-k", "--key", type=str, help="Filename of key for keysplitting.")
+    parser.add_argument("mode", type=str, help="Action to perform.", choices=("split", "merge", "key"))
+    parser.add_argument("-k", "--key", type=str, help="Filename of key horcrux.")
     parser.add_argument("-i", "--input", type=str, help="Names of input files.", nargs='*')
     parser.add_argument("-o", "--output", type=str, help="Names of output files.", nargs='*')
     parser.add_argument("-c", "--chunk-size", type=int, help="How many bytes to load into RAM per file (Default: 1MB)", default=1024 * 1024)
@@ -174,14 +137,12 @@ if __name__ == '__main__':
         sys.exit(0)
 
     # Ensure keysplitting has key argument
-    if (args.mode == "keysplit" and args.key is None) or (args.mode == "keyadd" and args.key is None):
-        error("No keyfile given.")
+    if args.mode == "key" and args.key is None:
+        error("No key horcrux specified given.")
 
     if args.mode == "split":
         split_file(args.input[0], args.output, args.chunk_size)
     elif args.mode == "merge":
         merge_files(args.input, args.output[0], args.chunk_size)
-    elif args.mode == "keysplit":
-        keysplit(args.key, args.input, args.output, args.chunk_size)
-    elif args.mode == "keyadd":
-        keyadd(args.key, args.input, args.output, args.chunk_size)
+    elif args.mode == "key":
+        horcrux_key(args.key, args.input, args.output, args.chunk_size)
