@@ -5,6 +5,8 @@ import sys
 import secrets
 import argparse
 
+CHUNK_SIZE = 1024 * 1024  # 1 MB
+
 from functools import reduce
 
 def error(message: str) -> None:
@@ -46,15 +48,20 @@ def merge_files(inputs: list, output_filename: str) -> None:
     output_file = open(output_filename, "wb")
     input_files = [open(x, "rb") for x in inputs]
 
-    input_bytes = [input_file.read(1) for input_file in input_files]
+    chunks = [f.read(CHUNK_SIZE) for f in input_files]
 
-    while all(input_bytes):
+    while all(chunks):
+        decrypted_chunk = bytearray(len(chunks[0]))
 
-        # XOR every byte to get the decrypted byte
-        decrypted_byte = reduce(lambda x, y: x ^ y, [ord(x) for x in input_bytes])
-        output_file.write(bytes([decrypted_byte]))
+        for i in range(len(chunks[0])):
+            decrypted_chunk[i] = 0
 
-        input_bytes = [input_file.read(1) for input_file in input_files]
+            for j in range(len(chunks)):
+                decrypted_chunk[i] ^= chunks[j][i]
+
+        output_file.write(decrypted_chunk)
+
+        chunks = [f.read(CHUNK_SIZE) for f in input_files]
 
     output_file.close()
 
