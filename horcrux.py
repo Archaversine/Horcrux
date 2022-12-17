@@ -11,32 +11,30 @@ def error(message: str) -> None:
 def log(message: str) -> None:
     print(f"<> {message}")
 
-def split_file(input_filename: str, outputs: list) -> None:
+def split_file(input_filename: str, outputs: list, chunk_size: int) -> None:
 
     input_file = open(input_filename, "rb")
-    target_files = [open(x, "wb") for x in outputs]
+    output_files = [open(x, "wb") for x in outputs]
 
-    byte = input_file.read(1)
+    input_chunk = input_file.read(chunk_size)
 
-    while byte:
-        random_bytes = [os.urandom(1) for _ in range(len(target_files) - 1)]
+    while input_chunk:
+        random_chunks = [os.urandom(len(input_chunk)) for _ in range(len(output_files) - 1)]
 
-        for i in range(len(target_files) - 1):
-            target_files[i].write(random_bytes[i])
+        for i in range(len(output_files) - 1):
+            output_files[i].write(random_chunks[i])
 
-        result_byte = byte
+        xor_chunk = bytearray(input_chunk)
 
-        for random_byte in random_bytes:
-            result_byte = bytes([ord(random_byte) ^ ord(result_byte)])
+        for i in range(len(xor_chunk)):
+            for chunk in random_chunks:
+                xor_chunk[i] ^= chunk[i]
 
-        target_files[-1].write(result_byte)
+        output_files[-1].write(xor_chunk)
 
-        byte = input_file.read(1)
+        input_chunk = input_file.read(chunk_size)
 
     input_file.close()
-
-    for target_file in target_files:
-        target_file.close()
 
 def merge_files(inputs: list, output_filename: str, chunk_size: int) -> None:
 
@@ -166,7 +164,7 @@ if __name__ == '__main__':
         error("No keyfile given.")
 
     if args.mode == "split":
-        split_file(args.input[0], args.output)
+        split_file(args.input[0], args.output, args.chunk_size)
     elif args.mode == "merge":
         merge_files(args.input, args.output[0], args.chunk_size)
     elif args.mode == "keysplit":
