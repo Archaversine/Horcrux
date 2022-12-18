@@ -82,7 +82,7 @@ course, both the key and the horcruxes and be split or merged even more.
 
 ```
 usage: horcrux [-h] [-k KEY] [-o [OUTPUT ...]] [-c CHUNK_SIZE]
-               {split,merge,key} [inputs ...]
+               {split,merge,key,compare} [inputs ...]
 
 Protect your files by splitting their souls.
 
