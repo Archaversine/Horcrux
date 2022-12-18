@@ -107,42 +107,35 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Protect your files by splitting their souls.')
     parser.add_argument("mode", type=str, help="Action to perform.", choices=("split", "merge", "key"))
+    parser.add_argument("inputs", type=str, nargs="*")
     parser.add_argument("-k", "--key", type=str, help="Filename of key horcrux.")
-    parser.add_argument("-i", "--input", type=str, help="Names of input files.", nargs='*')
-    parser.add_argument("-o", "--output", type=str, help="Names of output files.", nargs='*')
+    parser.add_argument("-o", "--output", type=str, help="Names of output files.", nargs='*', default=[])
     parser.add_argument("-c", "--chunk-size", type=int, help="How many bytes to load into RAM per file (Default: 1MB)", default=1024 * 1024)
 
     args = parser.parse_args()
 
-    # Ensure both inputs and outputs are specified
-    if args.input is None or args.output is None:
-        error("Must specify both inputs and outputs.")
-
-    # Ensure all input files are valid paths
-    for input_file in args.input:
-        if not os.path.isfile(input_file):
-            error(f"File {input_file} does not exist.")
-
-    # Ensure only one input file when splitting
-    if (args.mode == "split") and len(args.input) != 1:
-        error("Specify only 1 input file when splitting.")
-
-    # Ensure only one output file when merging
-    if (args.mode == "merge") and len(args.output) != 1:
-        error("Specify only 1 output file when merging.")
-
-    # Only split/merge if enough files to do so
-    if (args.mode == "split" and len(args.output) < 2) or (args.mode == "merge" and len(args.input) < 2):
-        log("Nothing to do.")
-        sys.exit(0)
-
-    # Ensure keysplitting has key argument
-    if args.mode == "key" and args.key is None:
-        error("No key horcrux specified given.")
-
     if args.mode == "split":
-        split_file(args.input[0], args.output, args.chunk_size)
+        split_file(args.inputs[0], args.inputs[1:] + args.output, args.chunk_size)
+
     elif args.mode == "merge":
-        merge_files(args.input, args.output[0], args.chunk_size)
+        input_filenames = args.inputs[:-1] if not args.output else args.inputs
+        output_filenames = args.output or args.inputs[-1:]
+        merge_files(input_filenames, output_filenames[0], args.chunk_size)
     elif args.mode == "key":
-        horcrux_key(args.key, args.input, args.output, args.chunk_size)
+
+        # Auto generate output filenames if not specified
+        specified_outputs = len(args.output)
+        unspecified_outputs = len(args.inputs) - specified_outputs
+        args.output.extend([''] * unspecified_outputs)
+
+        for i in range(specified_outputs, specified_outputs + unspecified_outputs):
+            args.output[i] = args.inputs[i] + ".hcx"
+
+        horcrux_key(args.key, args.inputs, args.output, args.chunk_size)
+
+    #if args.mode == "split":
+    #    split_file(args.inputs[0], args.output, args.chunk_size)
+    #elif args.mode == "merge":
+    #    merge_files(args.input, args.output[0], args.chunk_size)
+    #elif args.mode == "key":
+    #    horcrux_key(args.key, args.input, args.output, args.chunk_size)
