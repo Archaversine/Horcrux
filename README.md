@@ -48,6 +48,26 @@ In pseudocode:
 original_byte = byte_from_1hcx XOR byte_from_2hcx XOR byte_from_3hcx
 ```
 
+## Comparison Algorithm
+
+Since horcruxes are generated with purely random numbers, there is an
+astronomically low chance that a significantly large portion of the original
+data will be in one of the split components. To put into perspective how low of
+a chance this is of occuring, a file with three bytes has a 1 in 16,777,216
+chance of all three bytes not being encrypted and a 1 in 65,281 chance of two of
+the bytes not being encrypted. As more bytes are added to the file the chances
+of data being leaked from the original exponentially decreases. In order to
+verify that there isn't a significant amount of information leaked from the
+original, a comparison algorithm was added. This checks multiple files, and
+returns a percentage of the similarity between the files.
+
+In pseudocode, the percentage of the similarity is calculated with the following:
+
+```
+percentage = number_of_identical_bytes / total_number_of_bytes
+```
+
+
 ## Splitting with Key Horcruxes (Advanced Encryption)
 
 To create a horcrux that is compatible with multiple files, A 'key' with the
@@ -164,3 +184,15 @@ horcrux key a.txt b.txt c.txt --key key.hcx --output Ahorcrux.bin Bhorcrux.bin
 
 Note that in the above example an output name for `c.txt` is not specified, so
 the name `c.txt.hcx` will be used.
+
+## Comparing Files
+
+To view the similarity between two files, use the following syntax:
+
+```
+horcrux compare <fileToCompare> <file1> [<file2> ...]
+```
+
+The above command will show the percent similarity between `fileToCompare` and
+all the other files. Note that all other files won't be compared with each
+other, only `fileToCompare` and the other files.
