@@ -3,6 +3,7 @@
 import os
 import sys
 import argparse
+import numpy as np
 
 def error(message: str) -> None:
     print(f"<> Error: {message}")
@@ -24,13 +25,12 @@ def split_file(input_filename: str, outputs: list, chunk_size: int) -> None:
         for i in range(len(output_files) - 1):
             output_files[i].write(random_chunks[i])
 
-        xor_chunk = bytearray(input_chunk)
+        xor_chunk = np.frombuffer(input_chunk, dtype=np.uint8)
 
-        for i in range(len(xor_chunk)):
-            for chunk in random_chunks:
-                xor_chunk[i] ^= chunk[i]
+        for chunk in [np.frombuffer(random_chunk, dtype=np.uint8) for random_chunk in random_chunks]:
+            xor_chunk = xor_chunk ^ chunk
 
-        output_files[-1].write(xor_chunk)
+        output_files[-1].write(xor_chunk.tobytes())
 
         input_chunk = input_file.read(chunk_size)
 
@@ -44,13 +44,12 @@ def merge_files(inputs: list, output_filename: str, chunk_size: int) -> None:
     chunks = [f.read(chunk_size) for f in input_files]
 
     while all(chunks):
-        decrypted_chunk = bytearray(min([len(chunk) for chunk in chunks]))
+        decrypted_chunk = np.ndarray(min([len(chunk) for chunk in chunks]), dtype=np.uint8)
 
-        for i in range(len(decrypted_chunk)):
-            for chunk in chunks:
-                decrypted_chunk[i] ^= chunk[i]
+        for chunk in [np.frombuffer(c, dtype=np.uint8) for c in chunks]:
+            decrypted_chunk = decrypted_chunk ^ chunk
 
-        output_file.write(decrypted_chunk)
+        output_file.write(decrypted_chunk.tobytes())
 
         chunks = [f.read(chunk_size) for f in input_files]
 
@@ -86,12 +85,10 @@ def horcrux_key(keyname: str, inputs: list, outputs: list, chunk_size: int) -> N
             if not input_chunks[i]:
                 continue
 
-            xor_chunk = bytearray(input_chunks[i])
+            xor_chunk = np.frombuffer(input_chunks[i], dtype=np.uint8)
+            xor_chunk = xor_chunk ^ np.frombuffer(key_chunk, dtype=np.uint8)
 
-            for j in range(len(xor_chunk)):
-                xor_chunk[j] ^= key_chunk[j]
-
-            output_files[i].write(xor_chunk)
+            output_files[i].write(xor_chunk.tobytes())
 
         input_chunks = [input_file.read(chunk_size) for input_file in input_files]
 
@@ -123,8 +120,8 @@ def compare_files(input_filename: str, target_filenames: list, chunk_size: int) 
 
             total_byte_count[i] += len(target_chunks[i])
 
-            for j in range(min(len(input_chunk), len(target_chunks[i]))):
-                same_byte_count[i] += 1 if target_chunks[i][j] == input_chunk[j] else 0
+            target_chunk = np.frombuffer(target_chunks[i], dtype=np.uint8)
+            same_byte_count[i] += len(target_chunk[target_chunk == np.frombuffer(input_chunk, dtype=np.uint8)])
 
         target_chunks = [target_file.read(chunk_size) for target_file in target_files]
 
