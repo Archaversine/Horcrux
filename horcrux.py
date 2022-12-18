@@ -142,17 +142,25 @@ if __name__ == '__main__':
     parser.add_argument("inputs", type=str, nargs="*")
     parser.add_argument("-k", "--key", type=str, help="Filename of key horcrux.")
     parser.add_argument("-o", "--output", type=str, help="Names of output files.", nargs='*', default=[])
-    parser.add_argument("-c", "--chunk-size", type=int, help="How many bytes to load into RAM per file (Default: 1MB)", default=1024 * 1024)
+    parser.add_argument("-c", "--chunk-size", type=str, help="1M Default. How many bytes to load into RAM per file. Use K, M, G for more units or no unit for bytes.", default='1M')
 
     args = parser.parse_args()
 
+    chunk_size = None
+    chunk_units = {'K': 1024, 'M': 1024 * 1024, 'G': 1024 * 1024 * 1024}
+
+    if args.chunk_size[-1] in chunk_units:
+        chunk_size = int(args.chunk_size[:-1]) * chunk_units.get(args.chunk_size[-1])
+    else:
+        chunk_size = int(args.chunk_size)
+
     if args.mode == "split":
-        split_file(args.inputs[0], args.inputs[1:] + args.output, args.chunk_size)
+        split_file(args.inputs[0], args.inputs[1:] + args.output, chunk_size)
 
     elif args.mode == "merge":
         input_filenames = args.inputs[:-1] if not args.output else args.inputs
         output_filenames = args.output or args.inputs[-1:]
-        merge_files(input_filenames, output_filenames[0], args.chunk_size)
+        merge_files(input_filenames, output_filenames[0], chunk_size)
     elif args.mode == "key":
 
         # Auto generate output filenames if not specified
@@ -163,6 +171,6 @@ if __name__ == '__main__':
         for i in range(specified_outputs, specified_outputs + unspecified_outputs):
             args.output[i] = args.inputs[i] + ".hcx"
 
-        horcrux_key(args.key, args.inputs, args.output, args.chunk_size)
+        horcrux_key(args.key, args.inputs, args.output, chunk_size)
     elif args.mode == "compare":
-        compare_files(args.inputs[0], args.inputs[1:] + args.output, args.chunk_size)
+        compare_files(args.inputs[0], args.inputs[1:] + args.output, chunk_size)
