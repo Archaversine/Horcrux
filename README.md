@@ -61,23 +61,29 @@ course, both the key and the horcruxes and be split or merged even more.
 ## Command Line Usage
 
 ```
-usage: horcrux [-h] [-k KEY] [-i [INPUT ...]] [-o [OUTPUT ...]]
-               {split,merge,keysplit,keyadd}
+usage: horcrux [-h] [-k KEY] [-o [OUTPUT ...]] [-c CHUNK_SIZE]
+               {split,merge,key} [inputs ...]
 
 Protect your files by splitting their souls.
 
 positional arguments:
-  {split,merge,keysplit,keyadd}
-                        Action to perform.
+  {split,merge,key}     Action to perform.
+  inputs
 
 options:
   -h, --help            show this help message and exit
-  -k KEY, --key KEY     Filename of key for keysplitting.
-  -i [INPUT ...], --input [INPUT ...]
-                        Names of input files.
+  -k KEY, --key KEY     Filename of key horcrux.
   -o [OUTPUT ...], --output [OUTPUT ...]
                         Names of output files.
+  -c CHUNK_SIZE, --chunk-size CHUNK_SIZE
+                        How many bytes to load into RAM per file (Default:
+                        1MB)
 ```
+
+
+Note that on the above usage section, `[inputs ...]` is listed after all the
+command flags. This is due to how the `argparse` library prints usage. When
+using the horcrux command, inputs must be specified *before* flags.
 
 On windows, the program can be run with the `python` or `python3` command. This
 can also be done on linux, or `horcrux.py` can be placed in a folder in the PATH
@@ -88,7 +94,7 @@ variable with execution permissions and used directly as a command.
 To split a file into any number of parts, use the following syntax:
 
 ```
-horcrux split --input <fileToSplit> --output <horcrux1 horcrux2 [horcrux3 ...]>
+horcrux split <fileToSplit> <part1> <part2> [<part3> ...]
 ```
 
 The file will be split into however many output files are specified. So if five
@@ -107,7 +113,7 @@ will appear as corrupted files either way.
 To merge horcruxes into their original file, use the following syntax:
 
 ```
-horcrux merge --input <horcrux1 horcrux2 [horcrux3 ...]> --output <outputFile>
+horcrux merge <part1> <part2> [<part3> ...] <outputFile>
 ```
 
 The horcruxes will be merged into a single file whether or not they will created
@@ -115,7 +121,7 @@ a decrypted file. If the horcruxes vary in size, the merging algorithm will use
 the size of the smallest horcrux. Since there's no way to confirm if a file is a
 horcrux, the merge algorithm can be applied to any list of files.
 
-## Sharing Horcruxes Between Files (Master Key)
+## Key Horcruxes
 
 Different Files can share horcruxes that hold the information to both of them.
 For example, the horcrux `a.hcx` merged with the horcrux `k.hcx` may yield an
@@ -129,31 +135,32 @@ and indistinguishable from a regular horcrux.
 
 To split multiple files at once with a shared horcrux, use the following syntax:
 
-``` 
-horcrux keysplit --key <keyName> --input <file1 file2 [file3 ...]> --output <horcrux1 horcrux2 [horcrux3 ...]>
+```
+horcrux key <file1> [<file2> ...] --key <keyFileName>
 ```
 
-The number of input filenames must equal the number of output filesnames.
-
-In the above example, to recover `file1`, the following command would be run:
+If you want to specify specific output names, use the following:
 
 ```
-horcrux merge --input keyName horcrux1 --output file1
+horcrux key <file1> [<file2> ...] --output [output1 output2 ...] --key <keyFileName>
 ```
 
-This merges the key horcrux with the other horcrux generated.
+### Example
 
-## Adding to Shared Horcruxes (Add to Master Key)
-
-If a key horcrux already exists, it can still be used with other files even if
-they have not been split yet.
-
-To split one or more files to use a shared horcrux, use the folowing syntax:
+To Encrypt the files `a.txt`, `b.txt`, and `c.txt` with a key horcrux `key.hcx`:
 
 ```
-horcrux keyadd --key <keyName> --input <file1 file2 [file3 ...]> --output <horcrux1 horcrux2 [horcrux3 ...]>
+horcrux key a.txt b.txt c.txt --key key.hcx
 ```
 
-This does the same thing as the `keysplit` option, except it uses a key horcrux
-that already exists. (NOTE: the data of the key horcrux may be increased if it
-has a smaller size than any of the other input files).
+This will generate the horcruxes: `a.txt.hcx`, `b.txt.hcx`, and `c.txt.hcx`.
+
+The file extension of the horcruxes does not matter. To use specific outupts
+instead of auto generated ones the above example would be changed into:
+
+```
+horcrux key a.txt b.txt c.txt --key key.hcx --output Ahorcrux.bin Bhorcrux.bin
+```
+
+Note that in the above example an output name for `c.txt` is not specified, so
+the name `c.txt.hcx` will be used.
