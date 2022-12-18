@@ -166,10 +166,3 @@ if __name__ == '__main__':
         horcrux_key(args.key, args.inputs, args.output, args.chunk_size)
     elif args.mode == "compare":
         compare_files(args.inputs[0], args.inputs[1:] + args.output, args.chunk_size)
-
-    #if args.mode == "split":
-    #    split_file(args.inputs[0], args.output, args.chunk_size)
-    #elif args.mode == "merge":
-    #    merge_files(args.input, args.output[0], args.chunk_size)
-    #elif args.mode == "key":
-    #    horcrux_key(args.key, args.input, args.output, args.chunk_size)
