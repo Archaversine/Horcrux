@@ -103,10 +103,45 @@ def horcrux_key(keyname: str, inputs: list, outputs: list, chunk_size: int) -> N
     for output_file in output_files:
         output_file.close()
 
+def compare_files(input_filename: str, target_filenames: list, chunk_size: int) -> None:
+
+    input_file = open(input_filename, "rb")
+    target_files = [open(x, "rb") for x in target_filenames]
+
+    # Store the number of identical bytes for each target_file
+    same_byte_count = [0] * len(target_files)
+    total_byte_count = [0] * len(target_files)
+    target_chunks = [target_file.read(chunk_size) for target_file in target_files]
+
+    while any(target_chunks):
+
+        input_chunk = input_file.read(chunk_size)
+
+        for i in range(len(target_chunks)):
+            if not target_chunks[i]:
+                continue
+
+            total_byte_count[i] += len(target_chunks[i])
+
+            for j in range(min(len(input_chunk), len(target_chunks[i]))):
+                same_byte_count[i] += 1 if target_chunks[i][j] == input_chunk[j] else 0
+
+        target_chunks = [target_file.read(chunk_size) for target_file in target_files]
+
+    input_file.close()
+
+    for target_file in target_files:
+        target_file.close()
+
+    percentages = [same_byte_count[i] / total_byte_count[i] for i in range(len(target_files))]
+
+    for filename, percentage in zip(target_filenames, percentages):
+        print(f"{filename:30}: {percentage:.2%} Similarity")
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Protect your files by splitting their souls.')
-    parser.add_argument("mode", type=str, help="Action to perform.", choices=("split", "merge", "key"))
+    parser.add_argument("mode", type=str, help="Action to perform.", choices=("split", "merge", "key", "compare"))
     parser.add_argument("inputs", type=str, nargs="*")
     parser.add_argument("-k", "--key", type=str, help="Filename of key horcrux.")
     parser.add_argument("-o", "--output", type=str, help="Names of output files.", nargs='*', default=[])
@@ -132,6 +167,8 @@ if __name__ == '__main__':
             args.output[i] = args.inputs[i] + ".hcx"
 
         horcrux_key(args.key, args.inputs, args.output, args.chunk_size)
+    elif args.mode == "compare":
+        compare_files(args.inputs[0], args.inputs[1:] + args.output, args.chunk_size)
 
     #if args.mode == "split":
     #    split_file(args.inputs[0], args.output, args.chunk_size)
