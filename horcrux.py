@@ -44,7 +44,7 @@ def merge_files(inputs: list, output_filename: str, chunk_size: int) -> None:
     chunks = [f.read(chunk_size) for f in input_files]
 
     while all(chunks):
-        decrypted_chunk = np.ndarray(min([len(chunk) for chunk in chunks]), dtype=np.uint8)
+        decrypted_chunk = np.zeros(min([len(chunk) for chunk in chunks]), dtype=np.uint8)
 
         for chunk in [np.frombuffer(c, dtype=np.uint8) for c in chunks]:
             decrypted_chunk = decrypted_chunk ^ chunk
