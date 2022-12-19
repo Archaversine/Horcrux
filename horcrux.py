@@ -133,7 +133,7 @@ def compare_files(input_filename: str, target_filenames: list, chunk_size: int) 
     percentages = [same_byte_count[i] / total_byte_count[i] for i in range(len(target_files))]
 
     for filename, percentage in zip(target_filenames, percentages):
-        print(f"{filename:30}: {percentage:.2%} Similarity")
+        print(f"{filename:30}: {percentage:.5%} Similarity")
 
 if __name__ == '__main__':
 
