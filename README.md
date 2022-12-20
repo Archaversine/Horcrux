@@ -81,13 +81,14 @@ course, both the key and the horcruxes and be split or merged even more.
 ## Command Line Usage
 
 ```
-usage: horcrux [-h] [-k KEY] [-o [OUTPUT ...]] [-c CHUNK_SIZE]
+usage: horcrux [-h] [-k KEY] [-o [OUTPUT ...]] [-c CHUNK_SIZE] [-p PARTS]
                {split,merge,key,compare} [inputs ...]
 
 Protect your files by splitting their souls.
 
 positional arguments:
-  {split,merge,key}     Action to perform.
+  {split,merge,key,compare}
+                        Action to perform.
   inputs
 
 options:
@@ -96,8 +97,10 @@ options:
   -o [OUTPUT ...], --output [OUTPUT ...]
                         Names of output files.
   -c CHUNK_SIZE, --chunk-size CHUNK_SIZE
-                        How many bytes to load into RAM per file (Default:
-                        1MB)
+                        1M Default. How many bytes to load into RAM per file.
+                        Use K, M, G for more units or no unit for bytes.
+  -p PARTS, --parts PARTS
+                        How many parts to split into.
 ```
 
 
