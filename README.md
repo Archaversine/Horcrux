@@ -68,32 +68,33 @@ percentage = number_of_identical_bytes / total_number_of_bytes
 ```
 
 
-## Splitting with Key Horcruxes (Advanced Encryption)
+## Splitting with Lockets (Advanced Encryption)
 
-To create a horcrux that is compatible with multiple files, A 'key' with the
-same size as the largest input file is generated. After this key is generated,
-each input file is individually merged with the key. If a file is shorter than
-the key, then the extra bytes of the key are not used for merging (This is the
-default behavior for merging in general). The output files will each be
-horcruxes that can be merged with the key to recover it's original file. Of
-course, both the key and the horcruxes and be split or merged even more.
+To create a horcrux that is compatible with multiple files, A 'locket' with the
+same size as the largest input file is generated. After this locket is
+generated, each input file is individually merged with it. If a file is shorter
+than the locket, then the extra bytes of it are not used for merging (This is
+the default behavior for merging in general). The output files will each be
+horcruxes that can be merged with the locket to recover it's original file. Of
+course, both the locket and the horcruxes and be split or merged even more.
 
 ## Command Line Usage
 
 ```
-usage: horcrux [-h] [-k KEY] [-o [OUTPUT ...]] [-c CHUNK_SIZE] [-p PARTS]
-               {split,merge,key,compare} [inputs ...]
+usage: horcrux [-h] [-L LOCKET] [-o [OUTPUT ...]] [-c CHUNK_SIZE] [-p PARTS]
+               {split,merge,locket,compare} [inputs ...]
 
 Protect your files by splitting their souls.
 
 positional arguments:
-  {split,merge,key,compare}
+  {split,merge,locket,compare}
                         Action to perform.
   inputs
 
 options:
   -h, --help            show this help message and exit
-  -k KEY, --key KEY     Filename of key horcrux.
+  -L LOCKET, --locket LOCKET
+                        Filename of locket horcrux.
   -o [OUTPUT ...], --output [OUTPUT ...]
                         Names of output files.
   -c CHUNK_SIZE, --chunk-size CHUNK_SIZE
@@ -144,7 +145,7 @@ a decrypted file. If the horcruxes vary in size, the merging algorithm will use
 the size of the smallest horcrux. Since there's no way to confirm if a file is a
 horcrux, the merge algorithm can be applied to any list of files.
 
-## Key Horcruxes
+## Lockets
 
 Different Files can share horcruxes that hold the information to both of them.
 For example, the horcrux `a.hcx` merged with the horcrux `k.hcx` may yield an
@@ -159,21 +160,21 @@ and indistinguishable from a regular horcrux.
 To split multiple files at once with a shared horcrux, use the following syntax:
 
 ```
-horcrux key <file1> [<file2> ...] --key <keyFileName>
+horcrux locket <file1> [<file2> ...] --locket <locketFileName>
 ```
 
 If you want to specify specific output names, use the following:
 
 ```
-horcrux key <file1> [<file2> ...] --output [output1 output2 ...] --key <keyFileName>
+horcrux locket <file1> [<file2> ...] --output [output1 output2 ...] --locket <locketFileName>
 ```
 
 ### Example
 
-To Encrypt the files `a.txt`, `b.txt`, and `c.txt` with a key horcrux `key.hcx`:
+To Encrypt the files `a.txt`, `b.txt`, and `c.txt` with a locket `locket.hcx`:
 
 ```
-horcrux key a.txt b.txt c.txt --key key.hcx
+horcrux locket a.txt b.txt c.txt --locket locket.hcx
 ```
 
 This will generate the horcruxes: `a.txt.hcx`, `b.txt.hcx`, and `c.txt.hcx`.
@@ -182,7 +183,7 @@ The file extension of the horcruxes does not matter. To use specific outupts
 instead of auto generated ones the above example would be changed into:
 
 ```
-horcrux key a.txt b.txt c.txt --key key.hcx --output Ahorcrux.bin Bhorcrux.bin
+horcrux locket a.txt b.txt c.txt --locket locket.hcx --output Ahorcrux.bin Bhorcrux.bin
 ```
 
 Note that in the above example an output name for `c.txt` is not specified, so

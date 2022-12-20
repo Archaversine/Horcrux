@@ -58,13 +58,13 @@ def merge_files(inputs: list, output_filename: str, chunk_size: int) -> None:
     for input_file in input_files:
         input_file.close()
 
-def horcrux_key(keyname: str, inputs: list, outputs: list, chunk_size: int) -> None:
+def locket_transform(locket_name: str, inputs: list, outputs: list, chunk_size: int) -> None:
 
     if len(inputs) != len(outputs):
         error("Number of inputs must equal number of outputs.")
 
-    key_file = open(keyname, "ab+")
-    key_file.seek(0)
+    locket_file = open(locket_name, "ab+")
+    locket_file.seek(0)
 
     input_files = [open(x, "rb") for x in inputs]
     output_files = [open(x, "wb") for x in outputs]
@@ -73,26 +73,26 @@ def horcrux_key(keyname: str, inputs: list, outputs: list, chunk_size: int) -> N
 
     while any(input_chunks):
 
-        key_chunk = bytearray(key_file.read(chunk_size))
+        locket_chunk = bytearray(locket_file.read(chunk_size))
         max_chunk_length = max([len(input_chunk) for input_chunk in input_chunks])
 
-        if len(key_chunk) < max_chunk_length:
-            random_chunk = os.urandom(max_chunk_length - len(key_chunk))
-            key_file.write(random_chunk)
-            key_chunk.extend(random_chunk)
+        if len(locket_chunk) < max_chunk_length:
+            random_chunk = os.urandom(max_chunk_length - len(locket_chunk))
+            locket_file.write(random_chunk)
+            locket_chunk.extend(random_chunk)
 
         for i in range(len(input_chunks)):
             if not input_chunks[i]:
                 continue
 
             xor_chunk = np.frombuffer(input_chunks[i], dtype=np.uint8)
-            xor_chunk = xor_chunk ^ np.frombuffer(key_chunk, dtype=np.uint8)
+            xor_chunk = xor_chunk ^ np.frombuffer(locket_chunk, dtype=np.uint8)
 
             output_files[i].write(xor_chunk.tobytes())
 
         input_chunks = [input_file.read(chunk_size) for input_file in input_files]
 
-    key_file.close()
+    locket_file.close()
 
     for input_file in input_files:
         input_file.close()
@@ -139,9 +139,9 @@ def compare_files(input_filename: str, target_filenames: list, chunk_size: int) 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Protect your files by splitting their souls.')
-    parser.add_argument("mode", type=str, help="Action to perform.", choices=("split", "merge", "key", "compare"))
+    parser.add_argument("mode", type=str, help="Action to perform.", choices=("split", "merge", "locket", "compare"))
     parser.add_argument("inputs", type=str, nargs="*")
-    parser.add_argument("-k", "--key", type=str, help="Filename of key horcrux.")
+    parser.add_argument("-L", "--locket", type=str, help="Filename of locket horcrux.")
     parser.add_argument("-o", "--output", type=str, help="Names of output files.", nargs='*', default=[])
     parser.add_argument("-c", "--chunk-size", type=str, help="1M Default. How many bytes to load into RAM per file. Use K, M, G for more units or no unit for bytes.", default='1M')
     parser.add_argument("-p", "--parts", type=int, help="How many parts to split into.")
@@ -172,7 +172,7 @@ if __name__ == '__main__':
         input_filenames = args.inputs[:-1] if not args.output else args.inputs
         output_filenames = args.output or args.inputs[-1:]
         merge_files(input_filenames, output_filenames[0], chunk_size)
-    elif args.mode == "key":
+    elif args.mode == "locket":
 
         # Auto generate output filenames if not specified
         specified_outputs = len(args.output)
@@ -182,6 +182,6 @@ if __name__ == '__main__':
         for i in range(specified_outputs, specified_outputs + unspecified_outputs):
             args.output[i] = args.inputs[i] + ".hcx"
 
-        horcrux_key(args.key, args.inputs, args.output, chunk_size)
+        locket_transform(args.locket, args.inputs, args.output, chunk_size)
     elif args.mode == "compare":
         compare_files(args.inputs[0], args.inputs[1:] + args.output, chunk_size)
