@@ -110,6 +110,7 @@ def compare_files(input_filename: str, target_filenames: list, chunk_size: int) 
     total_byte_count = [0] * len(target_files)
     target_chunks = [target_file.read(chunk_size) for target_file in target_files]
 
+    # FIXME: Mismatch of chunk lengths when comparing
     while any(target_chunks):
 
         input_chunk = input_file.read(chunk_size)
@@ -143,6 +144,7 @@ if __name__ == '__main__':
     parser.add_argument("-k", "--key", type=str, help="Filename of key horcrux.")
     parser.add_argument("-o", "--output", type=str, help="Names of output files.", nargs='*', default=[])
     parser.add_argument("-c", "--chunk-size", type=str, help="1M Default. How many bytes to load into RAM per file. Use K, M, G for more units or no unit for bytes.", default='1M')
+    parser.add_argument("-p", "--parts", type=int, help="How many parts to split into.")
 
     args = parser.parse_args()
 
@@ -155,7 +157,16 @@ if __name__ == '__main__':
         chunk_size = int(args.chunk_size)
 
     if args.mode == "split":
-        split_file(args.inputs[0], args.inputs[1:] + args.output, chunk_size)
+        output_filenames = args.inputs[1:] + args.output
+        specified_outputs = len(output_filenames)
+        unspecified_outputs = args.parts - specified_outputs if args.parts else 0
+
+        output_filenames.extend([''] * unspecified_outputs)
+
+        for i in range(specified_outputs, specified_outputs + unspecified_outputs):
+            output_filenames[i] = f"{args.inputs[0]}.{i + 1}-of-{len(output_filenames)}.hcx"
+
+        split_file(args.inputs[0], output_filenames, chunk_size)
 
     elif args.mode == "merge":
         input_filenames = args.inputs[:-1] if not args.output else args.inputs
