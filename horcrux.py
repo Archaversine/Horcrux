@@ -163,7 +163,7 @@ if __name__ == '__main__':
     parser.add_argument("-o", "--output", type=str, help="Names of output files.", nargs='*', default=[])
     parser.add_argument("-c", "--chunk-size", type=str, help="1M Default. How many bytes to load into RAM per file. Use K, M, G for more units or no unit for bytes.", default='1M')
     parser.add_argument("-p", "--parts", type=int, help="How many parts to split into.")
-    parser.add_argument("-n", "--noise", type=str, help="Default: 0. Max amount of extra bytes to generate for horcruxes after splitting. Use K, M, G for more units or no unit for bytes", default='0')
+    parser.add_argument("-n", "--noise", type=str, help="Default: 0. Max amount of extra bytes to generate for horcruxes after splitting. Use K, M, G for more units or no unit for bytes.", default='0')
 
     args = parser.parse_args()
     chunk_size = parse_byte_count(args.chunk_size)

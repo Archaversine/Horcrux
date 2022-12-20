@@ -81,8 +81,7 @@ course, both the locket and the horcruxes and be split or merged even more.
 ## Command Line Usage
 
 ```
-usage: horcrux [-h] [-L LOCKET] [-o [OUTPUT ...]] [-c CHUNK_SIZE] [-p PARTS]
-               {split,merge,locket,compare} [inputs ...]
+usage: horcrux [-h] [-L LOCKET] [-o [OUTPUT ...]] [-c CHUNK_SIZE] [-p PARTS] [-n NOISE] {split,merge,locket,compare} [inputs ...]
 
 Protect your files by splitting their souls.
 
@@ -98,10 +97,11 @@ options:
   -o [OUTPUT ...], --output [OUTPUT ...]
                         Names of output files.
   -c CHUNK_SIZE, --chunk-size CHUNK_SIZE
-                        1M Default. How many bytes to load into RAM per file.
-                        Use K, M, G for more units or no unit for bytes.
+                        1M Default. How many bytes to load into RAM per file. Use K, M, G for more units or no unit for bytes.
   -p PARTS, --parts PARTS
                         How many parts to split into.
+  -n NOISE, --noise NOISE
+                        Default: 0. Max amount of extra bytes to generate for horcruxes after splitting. Use K, M, G for more units or no unit for bytes.
 ```
 
 
