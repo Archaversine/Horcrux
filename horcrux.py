@@ -110,10 +110,9 @@ def compare_files(input_filename: str, target_filenames: list, chunk_size: int) 
     total_byte_count = [0] * len(target_files)
     target_chunks = [target_file.read(chunk_size) for target_file in target_files]
 
-    # FIXME: Mismatch of chunk lengths when comparing
     while any(target_chunks):
 
-        input_chunk = input_file.read(chunk_size)
+        input_chunk = np.frombuffer(input_file.read(chunk_size), dtype=np.uint8)
 
         for i in range(len(target_chunks)):
             if not target_chunks[i]:
@@ -122,7 +121,8 @@ def compare_files(input_filename: str, target_filenames: list, chunk_size: int) 
             total_byte_count[i] += len(target_chunks[i])
 
             target_chunk = np.frombuffer(target_chunks[i], dtype=np.uint8)
-            same_byte_count[i] += len(target_chunk[target_chunk == np.frombuffer(input_chunk, dtype=np.uint8)])
+            min_len = min(len(target_chunk), len(input_chunk))
+            same_byte_count[i] += np.count_nonzero(target_chunk[:min_len] == input_chunk[:min_len])
 
         target_chunks = [target_file.read(chunk_size) for target_file in target_files]
 
