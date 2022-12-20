@@ -2,6 +2,7 @@
 
 import os
 import sys
+import secrets
 import argparse
 import numpy as np
 
@@ -20,7 +21,7 @@ def parse_byte_count(value: str) -> int:
 
     return int(value)
 
-def split_file(input_filename: str, outputs: list, chunk_size: int) -> None:
+def split_file(input_filename: str, outputs: list, chunk_size: int, noise: int) -> None:
 
     input_file = open(input_filename, "rb")
     output_files = [open(x, "wb") for x in outputs]
@@ -44,6 +45,14 @@ def split_file(input_filename: str, outputs: list, chunk_size: int) -> None:
 
     input_file.close()
 
+    rand_index = int.from_bytes(os.urandom(1), byteorder="big") % len(output_files)
+
+    for i, output_file in enumerate(output_files):
+        if i != rand_index:
+            output_file.write(os.urandom(secrets.randbelow(noise)))
+
+        output_file.close()
+
 def merge_files(inputs: list, output_filename: str, chunk_size: int) -> None:
 
     output_file = open(output_filename, "wb")
@@ -52,10 +61,11 @@ def merge_files(inputs: list, output_filename: str, chunk_size: int) -> None:
     chunks = [f.read(chunk_size) for f in input_files]
 
     while all(chunks):
-        decrypted_chunk = np.zeros(min([len(chunk) for chunk in chunks]), dtype=np.uint8)
+        min_len = min([len(chunk) for chunk in chunks])
+        decrypted_chunk = np.zeros(min_len, dtype=np.uint8)
 
         for chunk in [np.frombuffer(c, dtype=np.uint8) for c in chunks]:
-            decrypted_chunk = decrypted_chunk ^ chunk
+            decrypted_chunk = decrypted_chunk ^ chunk[:min_len]
 
         output_file.write(decrypted_chunk.tobytes())
 
@@ -153,30 +163,27 @@ if __name__ == '__main__':
     parser.add_argument("-o", "--output", type=str, help="Names of output files.", nargs='*', default=[])
     parser.add_argument("-c", "--chunk-size", type=str, help="1M Default. How many bytes to load into RAM per file. Use K, M, G for more units or no unit for bytes.", default='1M')
     parser.add_argument("-p", "--parts", type=int, help="How many parts to split into.")
+    parser.add_argument("-n", "--noise", type=str, help="Default: 0. Max amount of extra bytes to generate for horcruxes after splitting. Use K, M, G for more units or no unit for bytes", default='0')
 
     args = parser.parse_args()
-
     chunk_size = parse_byte_count(args.chunk_size)
 
     if args.mode == "split":
         output_filenames = args.inputs[1:] + args.output
         specified_outputs = len(output_filenames)
         unspecified_outputs = args.parts - specified_outputs if args.parts else 0
-
         output_filenames.extend([''] * unspecified_outputs)
 
         for i in range(specified_outputs, specified_outputs + unspecified_outputs):
             output_filenames[i] = f"{args.inputs[0]}.{i + 1}-of-{len(output_filenames)}.hcx"
 
-        split_file(args.inputs[0], output_filenames, chunk_size)
+        split_file(args.inputs[0], output_filenames, chunk_size, parse_byte_count(args.noise))
 
     elif args.mode == "merge":
         input_filenames = args.inputs[:-1] if not args.output else args.inputs
         output_filenames = args.output or args.inputs[-1:]
         merge_files(input_filenames, output_filenames[0], chunk_size)
     elif args.mode == "locket":
-
-        # Auto generate output filenames if not specified
         specified_outputs = len(args.output)
         unspecified_outputs = len(args.inputs) - specified_outputs
         args.output.extend([''] * unspecified_outputs)
