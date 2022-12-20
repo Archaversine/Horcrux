@@ -22,7 +22,6 @@ def parse_byte_count(value: str) -> int:
     return int(value)
 
 def split_file(input_filename: str, outputs: list, chunk_size: int, noise: int) -> None:
-
     input_file = open(input_filename, "rb")
     output_files = [open(x, "wb") for x in outputs]
 
@@ -44,7 +43,6 @@ def split_file(input_filename: str, outputs: list, chunk_size: int, noise: int) 
         input_chunk = input_file.read(chunk_size)
 
     input_file.close()
-
     rand_index = int.from_bytes(os.urandom(1), byteorder="big") % len(output_files)
 
     for i, output_file in enumerate(output_files):
@@ -54,7 +52,6 @@ def split_file(input_filename: str, outputs: list, chunk_size: int, noise: int) 
         output_file.close()
 
 def merge_files(inputs: list, output_filename: str, chunk_size: int) -> None:
-
     output_file = open(output_filename, "wb")
     input_files = [open(x, "rb") for x in inputs]
 
@@ -68,7 +65,6 @@ def merge_files(inputs: list, output_filename: str, chunk_size: int) -> None:
             decrypted_chunk = decrypted_chunk ^ chunk[:min_len]
 
         output_file.write(decrypted_chunk.tobytes())
-
         chunks = [f.read(chunk_size) for f in input_files]
 
     output_file.close()
@@ -77,7 +73,6 @@ def merge_files(inputs: list, output_filename: str, chunk_size: int) -> None:
         input_file.close()
 
 def locket_transform(locket_name: str, inputs: list, outputs: list, chunk_size: int) -> None:
-
     if len(inputs) != len(outputs):
         error("Number of inputs must equal number of outputs.")
 
@@ -90,7 +85,6 @@ def locket_transform(locket_name: str, inputs: list, outputs: list, chunk_size: 
     input_chunks = [input_file.read(chunk_size) for input_file in input_files]
 
     while any(input_chunks):
-
         locket_chunk = bytearray(locket_file.read(chunk_size))
         max_chunk_length = max([len(input_chunk) for input_chunk in input_chunks])
 
@@ -119,7 +113,6 @@ def locket_transform(locket_name: str, inputs: list, outputs: list, chunk_size: 
         output_file.close()
 
 def compare_files(input_filename: str, target_filenames: list, chunk_size: int) -> None:
-
     input_file = open(input_filename, "rb")
     target_files = [open(x, "rb") for x in target_filenames]
 
@@ -129,7 +122,6 @@ def compare_files(input_filename: str, target_filenames: list, chunk_size: int) 
     target_chunks = [target_file.read(chunk_size) for target_file in target_files]
 
     while any(target_chunks):
-
         input_chunk = np.frombuffer(input_file.read(chunk_size), dtype=np.uint8)
 
         for i in range(len(target_chunks)):
@@ -155,7 +147,6 @@ def compare_files(input_filename: str, target_filenames: list, chunk_size: int) 
         print(f"{filename:30}: {percentage:.5%} Similarity")
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser(description='Protect your files by splitting their souls.')
     parser.add_argument("mode", type=str, help="Action to perform.", choices=("split", "merge", "locket", "compare"))
     parser.add_argument("inputs", type=str, nargs="*")
@@ -178,7 +169,6 @@ if __name__ == '__main__':
             output_filenames[i] = f"{args.inputs[0]}.{i + 1}-of-{len(output_filenames)}.hcx"
 
         split_file(args.inputs[0], output_filenames, chunk_size, parse_byte_count(args.noise))
-
     elif args.mode == "merge":
         input_filenames = args.inputs[:-1] if not args.output else args.inputs
         output_filenames = args.output or args.inputs[-1:]
