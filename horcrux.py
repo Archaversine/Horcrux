@@ -12,6 +12,14 @@ def error(message: str) -> None:
 def log(message: str) -> None:
     print(f"<> {message}")
 
+def parse_byte_count(value: str) -> int:
+    units = {'K': 1024, 'M': 1024 * 1024, 'G': 1024 * 1024 * 1024}
+
+    if value[-1] in units:
+        return int(value[:-1]) * units.get(value[-1], 1)
+
+    return int(value)
+
 def split_file(input_filename: str, outputs: list, chunk_size: int) -> None:
 
     input_file = open(input_filename, "rb")
@@ -148,13 +156,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    chunk_size = None
-    chunk_units = {'K': 1024, 'M': 1024 * 1024, 'G': 1024 * 1024 * 1024}
-
-    if args.chunk_size[-1] in chunk_units:
-        chunk_size = int(args.chunk_size[:-1]) * chunk_units.get(args.chunk_size[-1])
-    else:
-        chunk_size = int(args.chunk_size)
+    chunk_size = parse_byte_count(args.chunk_size)
 
     if args.mode == "split":
         output_filenames = args.inputs[1:] + args.output
