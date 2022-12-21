@@ -98,7 +98,7 @@ def locket_transform(locket_name: str, inputs: list, outputs: list, chunk_size: 
                 continue
 
             xor_chunk = np.frombuffer(input_chunks[i], dtype=np.uint8)
-            xor_chunk = xor_chunk ^ np.frombuffer(locket_chunk, dtype=np.uint8)
+            xor_chunk = xor_chunk ^ np.frombuffer(locket_chunk, dtype=np.uint8)[:xor_chunk.size]
 
             output_files[i].write(xor_chunk.tobytes())
 
