@@ -179,7 +179,7 @@ if __name__ == '__main__':
         args.output.extend([''] * unspecified_outputs)
 
         for i in range(specified_outputs, specified_outputs + unspecified_outputs):
-            args.output[i] = args.inputs[i] + ".hcx"
+            args.output[i] = (args.inputs[i] + ".hcx").replace(".hcx.hcx", '')
 
         locket_transform(args.locket, args.inputs, args.output, chunk_size)
     elif args.mode == "compare":
