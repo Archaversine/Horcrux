@@ -46,7 +46,7 @@ def split_file(input_filename: str, outputs: list, chunk_size: int, noise: int) 
     rand_index = int.from_bytes(os.urandom(1), byteorder="big") % len(output_files)
 
     for i, output_file in enumerate(output_files):
-        if i != rand_index:
+        if i != rand_index and noise:
             output_file.write(os.urandom(secrets.randbelow(noise)))
 
         output_file.close()
